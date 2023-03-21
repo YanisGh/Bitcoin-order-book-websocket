@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Bitcoin Orders</title>
+        <style>
+          .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Bitcoin Orders</h1>
+        <div class="grid">
+          <div>
+            <h2>Moins de $100</h2>
+            <p class="order-count" id="count-100">0</p>
+            <ul id="orders-100"></ul>
+          </div>
+          <div>
+            <h2>$100 - $999</h2>
+            <p class="order-count" id="count-1000">0</p>
+            <ul id="orders-1000"></ul>
+          </div>
+          <div>
+            <h2>$1,000 - $9,999</h2>
+            <p class="order-count" id="count-10000">0</p>
+            <ul id="orders-10000"></ul>
+          </div>
+          <div>
+            <h2>Plus de $10,000</h2>
+            <p class="order-count" id="count-100000">0</p>
+            <ul id="orders-100000"></ul>
+          </div>
+        </div>
+    
+        <script>
+          const orders100 = document.getElementById('orders-100');
+          const orders1000 = document.getElementById('orders-1000');
+          const orders10000 = document.getElementById('orders-10000');
+          const orders100000 = document.getElementById('orders-100000');
+    
+          const count100 = document.getElementById('count-100');
+          const count1000 = document.getElementById('count-1000');
+          const count10000 = document.getElementById('count-10000');
+          const count100000 = document.getElementById('count-100000');
+    
+          let count100Value = 0;
+          let count1000Value = 0;
+          let count10000Value = 0;
+          let count100000Value = 0;
+    
+          const socket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
+          socket.addEventListener('open', (event) => {
+            console.log('Connected to WebSocket');
+          });
+          socket.addEventListener('message', (event) => {
+            const order = JSON.parse(event.data);
+            handleOrder(order);
+          });
+    
+          function handleOrder(order) {
+            const price = parseFloat(order.p);
+            const quantity = parseFloat(order.q);
+            if (price * quantity < 100) {
+              return;
+            } else if (price * quantity < 1000) {
+              addOrder(orders100, order);
+              count100Value++;
+              count100.textContent = count100Value.toString();
+            } else if (price * quantity < 10000) {
+              addOrder(orders1000, order);
+              count1000Value++;
+              count1000.textContent = count1000Value.toString();
+            } else if (price * quantity < 100000) {
+              addOrder(orders10000, order);
+              count10000Value++;
+              count10000.textContent = count10000Value.toString();
+            } else {
+              addOrder(orders100000, order);
+              count100000Value++;
+              count100000.textContent = count100000Value.toString();
+            }
+          }
+
+      function addOrder(ul, order) {
+        const li = document.createElement('li');
+        li.textContent = `${order.q} BTC at $${order.p}`;
+        ul.prepend(li);
+        //console.log(ul.childElementCount);
+      }
+    </script>
+  </body>
+</html>
